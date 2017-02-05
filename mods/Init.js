@@ -182,7 +182,7 @@ class Init {
         }
       });
     }).then((registry) => {
-      this.logger.info(`从${registry}安装npm依赖`);
+      this.logger.info(`从${registry}安装依赖`);
 
       return co(function*() {
         yield npminstall({
