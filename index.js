@@ -1,6 +1,10 @@
 "use strict";
 
-module.exports = {
-  Init: require("./mods/Init"),
-  Login: require("./mods/Login")
-};
+const fs   = require("fs");
+const path = require("path");
+
+const dir = fs.readdirSync(__dirname + "/mods");
+dir.forEach(function (i) {
+  let name      = path.basename(i, ".js");
+  exports[name] = require("./mods/" + name);
+});

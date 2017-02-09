@@ -9,25 +9,16 @@ const npminstall  = require("npminstall");
 const gitUrlParse = require("git-url-parse");
 const Git         = require("simple-git");
 const WebSocket   = require("ws");
-const Login       = require("./Login");
 
-class Init {
-  constructor(host, app, secret, logger) {
-    this.host   = host;
-    this.app    = app;
-    this.secret = secret;
+const Base = require("../Base");
 
-    this.logger = logger || console;
-  }
-
+class Init extends Base {
   run(api, group, repo, description, scaffold, version, defaultGroup) {
-    let login = new Login();
-    if (!login.token) {
-      this.logger.error("尚未验证！");
+    if (!this.token) {
       throw new Error(0);
     }
 
-    let url = util.format(`http://${this.host}${api}`, this.app, this.secret);
+    let url = util.format(`https://${this.host}${api}`, this.app, this.secret);
 
     let _scaffold;
     let parser = gitUrlParse(scaffold);
@@ -52,7 +43,7 @@ class Init {
             description: description,
             scaffold: _scaffold,
             version: version,
-            token: login.token,
+            token: this.token,
             platform: "moto"
           }
         }, (err, res, content) => {
@@ -60,32 +51,29 @@ class Init {
             try {
               let data = JSON.parse(content);
               if (!data.status) {
-                this.logger.error("状态异常！");
-                reject();
+                reject(new Error("状态异常：" + JSON.stringify(data, null, 2)));
               }
             }
             catch (err) {
-              reject();
+              reject(new Error("JSON解析失败！"));
             }
 
             resolve(content);
           }
           else {
-            this.logger.error("服务端响应异常！");
-            reject();
+            reject(new Error("服务端响应异常！"));
           }
         });
       });
     }
     else {
-      this.logger.error("信息不全！");
-      return Promise.reject();
+      return Promise.reject(new Error("信息不全！"));
     }
   }
 
   ws(api, content) {
     return new Promise((resolve, reject) => {
-      let ws = new WebSocket(`ws://${this.host}${api}`);
+      let ws = new WebSocket(`wss://${this.host}${api}`);
 
       ws.on("open", () => {
         ws.send(content);
@@ -101,12 +89,11 @@ class Init {
             }
           }
           else {
-            reject();
+            reject(new Error("状态异常：" + JSON.stringify(json, null, 2)));
           }
         }
         catch (err) {
-          this.logger.error("数据流异常！");
-          reject();
+          reject(new Error("数据流异常！"));
         }
       });
     });
@@ -128,8 +115,7 @@ class Init {
             resolve();
           }
           else {
-            this.logger.error(`${relPath} 目录已存在，请手动清理，或加 -f 强制执行！`);
-            reject();
+            reject(new Error(`${relPath} 目录已存在，请手动清理，或加 -f 强制执行！`));
           }
         });
       }
@@ -137,13 +123,12 @@ class Init {
       return new Promise((resolve, reject) => {
         extra.emptyDir(targetFolder, (e) => {
           if (e) {
-            reject();
+            reject(e);
           }
           else {
             Git(targetFolder).clone(gitUrl, targetFolder, ["-b", branch], (err) => {
               if (err) {
-                this.logger.error(`git clone ${gitUrl} -b ${branch}失败！`);
-                reject();
+                reject(new Error(`git clone ${gitUrl} -b ${branch}失败！`));
               }
               else {
                 this.logger.info(`git clone ${gitUrl} -b ${branch}`);
@@ -178,7 +163,7 @@ class Init {
           });
         }
         else {
-          reject();
+          reject(err);
         }
       });
     }).then((registry) => {
