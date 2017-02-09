@@ -1,16 +1,13 @@
 "use strict";
 
-const util    = require("util");
 const request = require("request");
 
 const Base = require("../Base");
 
 class Login extends Base {
   check(api, email, password) {
-    let url = util.format(`https://${this.host}${api}`, this.app, this.secret);
-
     return new Promise((resolve, reject) => {
-      request.post(url, {
+      request.post(this.apiURL(api), {
         form: {
           email: email,
           password: password

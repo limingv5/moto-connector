@@ -12,6 +12,7 @@
     "co": "^4.6.0",
     "fs-extra": "^2.0.0",
     "git-url-parse": "^6.2.0",
+    "git-user-info": "^1.0.0",
     "npminstall": "^2.20.0",
     "request": "^2.79.0",
     "simple-git": "^1.65.0",

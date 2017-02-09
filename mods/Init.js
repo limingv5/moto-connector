@@ -1,6 +1,5 @@
 "use strict";
 
-const util        = require("util");
 const pathLib     = require("path");
 const extra       = require("fs-extra");
 const co          = require("co");
@@ -13,15 +12,13 @@ const WebSocket   = require("ws");
 const Base = require("../Base");
 
 class Init extends Base {
-  run(api, group, repo, description, scaffold, version, defaultGroup) {
+  run(api, options) {
     if (!this.token) {
       throw new ReferenceError("尚未验证！");
     }
 
-    let url = util.format(`https://${this.host}${api}`, this.app, this.secret);
-
     let _scaffold;
-    let parser = gitUrlParse(scaffold);
+    let parser = gitUrlParse(options.scaffold);
     if (parser.owner && parser.name) {
       _scaffold = parser.owner + '/' + parser.name;
     }
@@ -29,41 +26,16 @@ class Init extends Base {
       if (parser.name) {
         _scaffold = parser.source + '/' + parser.name;
       }
-      else if (defaultGroup) {
-        _scaffold = defaultGroup + '/' + parser.source;
-      }
     }
 
-    if (_scaffold && group && repo) {
-      return new Promise((resolve, reject) => {
-        request.post(url, {
-          form: {
-            group: group,
-            name: repo,
-            description: description,
-            scaffold: _scaffold,
-            version: version,
-            token: this.token,
-            platform: "moto"
-          }
-        }, (err, res, content) => {
-          if (!err && res && res.statusCode == 200) {
-            try {
-              let data = JSON.parse(content);
-              if (!data.status) {
-                reject(new Error("状态异常：" + JSON.stringify(data, null, 2)));
-              }
-            }
-            catch (err) {
-              reject(new Error("JSON解析失败！"));
-            }
-
-            resolve(content);
-          }
-          else {
-            reject(new Error("服务端响应异常！"));
-          }
-        });
+    if (_scaffold && options.group && options.repo) {
+      return this.handShake(api, {
+        scaffold: _scaffold,
+        version: options.version,
+        group: options.group,
+        name: options.repo,
+        description: options.description,
+        platform: options.platform
       });
     }
     else {
@@ -73,7 +45,7 @@ class Init extends Base {
 
   ws(api, content) {
     return new Promise((resolve, reject) => {
-      let ws = new WebSocket(`wss://${this.host}${api}`);
+      let ws = new WebSocket(this.wsURL(api));
 
       ws.on("open", () => {
         ws.send(content);
@@ -95,6 +67,10 @@ class Init extends Base {
         catch (err) {
           reject(new Error("数据流异常！"));
         }
+      });
+
+      ws.on("error", (err) => {
+        reject(err);
       });
     });
   }
