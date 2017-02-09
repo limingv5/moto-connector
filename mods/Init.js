@@ -15,7 +15,7 @@ const Base = require("../Base");
 class Init extends Base {
   run(api, group, repo, description, scaffold, version, defaultGroup) {
     if (!this.token) {
-      throw new Error(0);
+      throw new ReferenceError("尚未验证！");
     }
 
     let url = util.format(`https://${this.host}${api}`, this.app, this.secret);
