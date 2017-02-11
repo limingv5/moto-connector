@@ -2,7 +2,6 @@
 
 const fsLib       = require("fs-extra");
 const pathLib     = require("path");
-const WebSocket   = require("ws");
 const Git         = require("simple-git");
 const gitUserInfo = require("git-user-info");
 const findDotGit  = require("../libs/findDotGit");
@@ -46,7 +45,7 @@ class Deploy extends Base {
     });
   }
 
-  run(api, message, options) {
+  push(api, message, options) {
     return new Promise((resolve, reject) => {
       let gitRc = findDotGit();
       if (gitRc) {
@@ -105,7 +104,7 @@ class Deploy extends Base {
             reject(new Error(`${this.currentBranch}分支push失败！`));
           }
           else {
-            this.logger.done(`git push origin ${this.currentBranch}`);
+            this.logger.info(`git push origin ${this.currentBranch}`);
             resolve();
           }
         });
@@ -125,11 +124,10 @@ class Deploy extends Base {
                 let m = str.match(/:([^\s]*?)\.git/);
                 if (m && m[1]) {
                   resolve({
-                    hash: hash.replace(/\n|\r/gm, ''),
-                    repo: m[1],
+                    project: m[1],
                     branch: this.currentBranch,
-                    isTag: options.publish,
-                    platform: options.platform
+                    hash: hash.replace(/\n|\r/gm, ''),
+                    isTag: options.publish
                   });
                 }
                 else {
@@ -139,40 +137,18 @@ class Deploy extends Base {
             })
           }
         });
-      }).then((obj) => {
-        return this.handShake(api, obj);
-      });
-    });
-  }
-
-  ws(api, hash) {
-    return new Promise((resolve, reject) => {
-      let ws = new WebSocket(this.wsURL(api));
-
-      ws.on("open", () => {
-        ws.send(hash);
-      });
-
-      ws.on("message", (event) => {
-        try {
-          let json = JSON.parse(event);
-          this.logger.log(json.message);
-          if (json.status) {
-            if (json.finish && json.cdn) {
-              resolve(json.cdn);
-            }
+      }).then((form) => {
+        return this.handShake(api).then((data) => {
+          if (data && data.status && data.auth && data.next) {
+            return this.ws(data.next, {
+              auth: data.auth,
+              form: form
+            });
           }
           else {
-            reject(new Error("状态异常：" + JSON.stringify(json, null, 2)));
+            return Promise.reject("服务端数据异常！");
           }
-        }
-        catch (err) {
-          reject(new Error("数据流异常！"));
-        }
-      });
-
-      ws.on("error", (err) => {
-        reject(err);
+        });
       });
     });
   }

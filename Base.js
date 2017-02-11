@@ -64,14 +64,15 @@ class Base {
       ws.on("message", (event) => {
         try {
           let json = JSON.parse(event);
-          this.logger.log(json.message);
           if (json.status) {
+            this.logger.log(json.message);
+
             if (json.finish) {
               resolve(json);
             }
           }
           else {
-            reject(new Error("状态异常：" + JSON.stringify(json, null, 2)));
+            reject(new Error(json.message));
           }
         }
         catch (err) {
