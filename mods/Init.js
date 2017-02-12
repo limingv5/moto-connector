@@ -7,8 +7,7 @@ const request     = require("request");
 const npminstall  = require("npminstall");
 const gitUrlParse = require("git-url-parse");
 const Git         = require("simple-git");
-
-const findDotGit = require("../libs/findDotGit");
+const findDotGit  = require("../libs/findDotGit");
 
 const Base = require("../Base");
 
@@ -16,12 +15,6 @@ const cnpmUrl = "https://registry.npm.taobao.org";
 const tnpmUrl = "http://registry.npm.alibaba-inc.com";
 
 class Init extends Base {
-
-  constructor(host, app, secret, logger) {
-    super(host, app, secret, logger);
-    this.targetFolder = null;
-  }
-
   create(api, options) {
     if (!this.token) {
       throw new ReferenceError("尚未验证！");
@@ -62,21 +55,17 @@ class Init extends Base {
     }
   }
 
-  setTarget(base, relPath) {
-    this.targetFolder = pathLib.join(base || process.cwd(), relPath);
-  }
-
   clone(gitUrl, relPath, options) {
     options = options || {};
 
-    this.setTarget(options.base, relPath);
+    let targetFolder = pathLib.join(options.base || process.cwd(), relPath);
 
     return new Promise((resolve, reject) => {
       if (options.force) {
         resolve();
       }
       else {
-        extra.access(this.targetFolder, (err) => {
+        extra.access(targetFolder, (err) => {
           if (err) {
             resolve();
           }
@@ -87,20 +76,20 @@ class Init extends Base {
       }
     }).then(() => {
       return new Promise((resolve, reject) => {
-        extra.emptyDir(this.targetFolder, (e) => {
+        extra.emptyDir(targetFolder, (e) => {
           if (e) {
             reject(e);
           }
           else {
             options.branch = options.branch || "master";
 
-            Git(this.targetFolder).clone(gitUrl, this.targetFolder, ["-b", options.branch], (err) => {
+            Git(targetFolder).clone(gitUrl, targetFolder, ["-b", options.branch], (err) => {
               if (err) {
                 reject(new Error(`git clone ${gitUrl} -b ${options.branch}失败！`));
               }
               else {
                 this.logger.info(`git clone ${gitUrl} -b ${options.branch}`);
-                resolve();
+                resolve(targetFolder);
               }
             });
           }
@@ -109,24 +98,19 @@ class Init extends Base {
     });
   }
 
-  npm(relPath, options) {
+  npm(targetFolder, options) {
     options = options || {};
 
     return new Promise((resolve, reject) => {
-      if (!this.targetFolder) {
-        if (relPath) {
-          this.setTarget(options.base, relPath);
-        }
-        else {
-          let gitRc = findDotGit();
-          if (gitRc) {
-            this.targetFolder = pathLib.dirname(gitRc);
-          }
+      if (!targetFolder) {
+        let gitRc = findDotGit();
+        if (gitRc) {
+          targetFolder = pathLib.dirname(gitRc);
         }
       }
 
-      if (this.targetFolder) {
-        extra.access(pathLib.join(this.targetFolder, "package.json"), (err) => {
+      if (targetFolder) {
+        extra.access(pathLib.join(targetFolder, "package.json"), (err) => {
           if (err) {
             reject(err);
           }
@@ -137,7 +121,7 @@ class Init extends Base {
             else {
               this.logger.log("探测npm registry...");
 
-              request.head(tnpmUrl, function (e, res) {
+              request.head(tnpmUrl, (e, res) => {
                 if (!e && res && res.statusCode == 200) {
                   resolve(tnpmUrl);
                 }
@@ -155,7 +139,6 @@ class Init extends Base {
     }).then((registry) => {
       this.logger.info(`从${registry}安装依赖`);
 
-      let targetFolder = this.targetFolder;
       return co(function*() {
         yield npminstall({
           root: targetFolder,
@@ -165,16 +148,16 @@ class Init extends Base {
     });
   }
 
-  branch(branchName, type) {
+  branch(branchName, type, targetFolder) {
     return new Promise((resolve, reject) => {
-      if (!this.targetFolder) {
+      if (!targetFolder) {
         let gitRc = findDotGit();
         if (gitRc) {
-          this.targetFolder = pathLib.dirname(gitRc);
+          targetFolder = pathLib.dirname(gitRc);
         }
       }
 
-      if (this.targetFolder) {
+      if (targetFolder) {
         let _t = "minor";
         switch (type) {
           case 'x':
@@ -185,7 +168,7 @@ class Init extends Base {
             break;
         }
 
-        let git = Git(this.targetFolder);
+        let git = Git(targetFolder);
         git.fetch().branch((list_err, branchList) => {
           if (list_err) {
             reject(list_err);
