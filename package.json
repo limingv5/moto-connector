@@ -1,6 +1,6 @@
 {
   "name": "moto-connector",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "moto with feb",
   "main": "index.js",
   "scripts": {

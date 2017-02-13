@@ -5,7 +5,7 @@ const Fs   = require("fs");
 
 const internals = {};
 
-internals.checkPaths = function (paths, index) {
+internals.checkPaths = (paths, index) => {
   index = index || 0;
   if (internals.isDirectory(paths[index])) {
     return paths[index];
@@ -18,7 +18,7 @@ internals.checkPaths = function (paths, index) {
   return internals.checkPaths(paths, index);
 };
 
-internals.isDirectory = function (filePath) {
+internals.isDirectory = (filePath) => {
   try {
     const stat = Fs.statSync(filePath);
     return stat.isDirectory();
@@ -28,7 +28,7 @@ internals.isDirectory = function (filePath) {
   }
 };
 
-internals.dirPaths = function (directory, filename) {
+internals.dirPaths = (directory, filename) => {
   const filePaths = [];
   const pathRoot  = Path.parse(directory).root;
 
@@ -40,8 +40,8 @@ internals.dirPaths = function (directory, filename) {
   return filePaths;
 };
 
-module.exports = function () {
-  const dirPaths = internals.dirPaths(process.cwd(), ".git");
+module.exports = (dir) => {
+  const dirPaths = internals.dirPaths(dir || process.cwd(), ".git");
 
   let _p = internals.checkPaths(dirPaths);
   if (_p) {

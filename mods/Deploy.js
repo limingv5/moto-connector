@@ -45,9 +45,16 @@ class Deploy extends Base {
     });
   }
 
+  /**
+   *
+   * @param api
+   * @param message
+   * @param options[dir, email, user, publish]
+   * @returns {Promise.<TResult>}
+   */
   push(api, message, options) {
     return new Promise((resolve, reject) => {
-      let gitRc = findDotGit();
+      let gitRc = findDotGit(options.dir);
       if (gitRc) {
         this.Git = Git(pathLib.dirname(gitRc));
 
