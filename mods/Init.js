@@ -184,7 +184,10 @@ class Init extends Base {
                 }
                 else {
                   this.logger.info(`切换到新分支: ${newVersion}`);
-                  resolve(newVersion);
+                  git.pull("origin", "master", (err, ps) => {
+                    this.logger.info("合并master");
+                    resolve(newVersion);
+                  });
                 }
               });
             }
