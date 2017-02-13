@@ -59,10 +59,10 @@ class Deploy extends Base {
         this.Git = Git(pathLib.dirname(gitRc));
 
         if (options.email) {
-          this.Git.addConfig("user.email", config.email);
+          this.Git.addConfig("user.email", options.email);
         }
         if (options.user) {
-          this.Git.addConfig("user.name", config.user);
+          this.Git.addConfig("user.name", options.user);
         }
 
         this.Git.branch((e, summary) => {
@@ -134,7 +134,8 @@ class Deploy extends Base {
                     project: m[1],
                     branch: this.currentBranch,
                     hash: hash.replace(/\n|\r/gm, ''),
-                    isTag: options.publish
+                    isTag: options.publish,
+                    dist: options.dist
                   });
                 }
                 else {
