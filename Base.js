@@ -26,30 +26,35 @@ class Base {
 
   handShake(api, form) {
     return new Promise((resolve, reject) => {
-      request.post(this.apiURL(api), {
-        form: Object.assign({}, {
-          token: this.token,
-          platform: this.app
-        }, form || {})
-      }, (err, res, content) => {
-        if (!err && res && res.statusCode == 200) {
-          try {
-            let data = JSON.parse(content);
-            if (!data.status) {
-              reject(new Error("状态异常：" + JSON.stringify(data, null, 2)));
+      if (this.token && this.host && this.app && this.secret) {
+        request.post(this.apiURL(api), {
+          form: Object.assign({}, {
+            token: this.token,
+            platform: this.app
+          }, form || {})
+        }, (err, res, content) => {
+          if (!err && res && res.statusCode == 200) {
+            try {
+              let data = JSON.parse(content);
+              if (!data.status) {
+                reject(new Error("状态异常：" + JSON.stringify(data, null, 2)));
+              }
+              else {
+                resolve(data);
+              }
             }
-            else {
-              resolve(data);
+            catch (err) {
+              reject(new Error("JSON解析失败！"));
             }
           }
-          catch (err) {
-            reject(new Error("JSON解析失败！"));
+          else {
+            reject(new Error("服务端响应异常！"));
           }
-        }
-        else {
-          reject(new Error("服务端响应异常！"));
-        }
-      });
+        });
+      }
+      else {
+        reject(new TypeError("服务端信息缺失！"));
+      }
     });
   }
 

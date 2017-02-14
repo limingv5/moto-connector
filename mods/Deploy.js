@@ -157,7 +157,7 @@ class Deploy extends Base {
             });
           }
           else {
-            return Promise.reject("服务端数据异常！");
+            return Promise.reject(new Error("服务端数据异常！"));
           }
         });
       }).then((ret) => {

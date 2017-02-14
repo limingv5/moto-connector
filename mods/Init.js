@@ -166,7 +166,7 @@ class Init extends Base {
               let newVersion = `${_t}/${branchName}`;
               let history    = branchList.all.map(branch => branch.replace("remotes/origin/", ''));
 
-              if ([...new Set(history)].indexOf(newVersion) == -1) {
+              if (Array.from(new Set(history)).indexOf(newVersion) == -1) {
                 git.checkoutLocalBranch(newVersion, (err) => {
                   if (err) {
                     reject(err);
