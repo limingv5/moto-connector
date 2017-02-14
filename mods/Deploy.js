@@ -3,7 +3,6 @@
 const fsLib       = require("fs-extra");
 const pathLib     = require("path");
 const Git         = require("simple-git");
-const gitUserInfo = require("git-user-info");
 const findDotGit  = require("../libs/findDotGit");
 
 const Base = require("../Base");
@@ -80,14 +79,18 @@ class Deploy extends Base {
     }).then((summary) => {
       this.currentBranch = summary.current;
 
-      let branchList = summary.all;
-      return this.pull("master", branchList).then(() => {
-        return this.pull(this.currentBranch, branchList);
-      });
+      if (this.currentBranch == "master") {
+        return Promise.reject(new ReferenceError("master分支为保护分支！"));
+      }
+      else {
+        let branchList = summary.all;
+        return this.pull("master", branchList).then(() => {
+          return this.pull(this.currentBranch, branchList);
+        });
+      }
     }).then(() => {
       return new Promise((resolve, reject) => {
-        let gitUser = gitUserInfo();
-        message     = message || `Push commit by ${gitUser.name}`;
+        message = message || `Push Commit`;
 
         this.Git.add("./*").commit(message, (err, commit) => {
           if (err) {
@@ -157,6 +160,19 @@ class Deploy extends Base {
             return Promise.reject("服务端数据异常！");
           }
         });
+      }).then((ret) => {
+        if (options.publish) {
+          return new Promise((resolve) => {
+            this.Git.checkout("master", () => {
+              this.Git.pull("origin", "master", () => {
+                resolve(ret);
+              });
+            });
+          });
+        }
+        else {
+          return Promise.resolve(ret);
+        }
       });
     });
   }

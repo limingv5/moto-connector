@@ -5,7 +5,6 @@ const extra       = require("fs-extra");
 const co          = require("co");
 const request     = require("request");
 const npminstall  = require("npminstall");
-const gitUrlParse = require("git-url-parse");
 const Git         = require("simple-git");
 const findDotGit  = require("../libs/findDotGit");
 
@@ -20,18 +19,7 @@ class Init extends Base {
       throw new ReferenceError("尚未验证！");
     }
 
-    let _scaffold;
-    let parser = gitUrlParse(options.scaffold);
-    if (parser.owner && parser.name) {
-      _scaffold = parser.owner + '/' + parser.name;
-    }
-    else {
-      if (parser.name) {
-        _scaffold = parser.source + '/' + parser.name;
-      }
-    }
-
-    if (_scaffold && options.group && options.name) {
+    if (options.scaffold && options.group && options.name) {
       return this.handShake(api).then((data) => {
         if (data && data.status && data.auth && data.next) {
           return this.ws(data.next, {
@@ -40,7 +28,7 @@ class Init extends Base {
               group: options.group,
               name: options.name,
               description: options.description,
-              scaffold: _scaffold,
+              scaffold: options.scaffold,
               version: options.version
             }
           });
@@ -169,32 +157,34 @@ class Init extends Base {
         }
 
         let git = Git(targetFolder);
-        git.fetch().branch((list_err, branchList) => {
-          if (list_err) {
-            reject(list_err);
-          }
-          else {
-            let newVersion = `${_t}/${branchName}`;
-            let history    = branchList.all.map(branch => branch.replace("remotes/origin/", ''));
-
-            if ([...new Set(history)].indexOf(newVersion) == -1) {
-              git.checkoutLocalBranch(newVersion, (err) => {
-                if (err) {
-                  reject(err);
-                }
-                else {
-                  this.logger.info(`切换到新分支: ${newVersion}`);
-                  git.pull("origin", "master", (err, ps) => {
-                    this.logger.info("合并master");
-                    resolve(newVersion);
-                  });
-                }
-              });
+        git.fetch(() => {
+          git.branch((list_err, branchList) => {
+            if (list_err) {
+              reject(list_err);
             }
             else {
-              reject(new Error("分支已存在！"));
+              let newVersion = `${_t}/${branchName}`;
+              let history    = branchList.all.map(branch => branch.replace("remotes/origin/", ''));
+
+              if ([...new Set(history)].indexOf(newVersion) == -1) {
+                git.checkoutLocalBranch(newVersion, (err) => {
+                  if (err) {
+                    reject(err);
+                  }
+                  else {
+                    this.logger.info(`切换到新分支: ${newVersion}`);
+                    git.pull("origin", "master", (err, ps) => {
+                      this.logger.info("合并master");
+                      resolve(newVersion);
+                    });
+                  }
+                });
+              }
+              else {
+                reject(new Error("分支已存在！"));
+              }
             }
-          }
+          });
         });
       }
       else {
