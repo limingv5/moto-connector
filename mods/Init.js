@@ -29,7 +29,8 @@ class Init extends Base {
               name: options.name,
               description: options.description,
               scaffold: options.scaffold,
-              version: options.version
+              version: options.version,
+              passRender: options.passRender
             }
           });
         }
@@ -189,6 +190,27 @@ class Init extends Base {
       }
       else {
         reject(new Error("所在位置非git目录！"));
+      }
+    });
+  }
+
+  pkgName(name, targetFolder) {
+    return new Promise((resolve, reject) => {
+      try {
+        let p = pathLib.join(targetFolder, "package.json");
+        let pkg = require(p);
+        pkg.name = name;
+        extra.outputJson(p, pkg, (err) => {
+          if (err) {
+            reject(err);
+          }
+          else {
+            resolve();
+          }
+        });
+      }
+      catch (err) {
+        reject(err);
       }
     });
   }
