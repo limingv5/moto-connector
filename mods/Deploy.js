@@ -3,6 +3,7 @@
 const fsLib       = require("fs-extra");
 const pathLib     = require("path");
 const Git         = require("simple-git");
+const gitUrlParse = require("git-url-parse");
 const findDotGit  = require("../libs/findDotGit");
 
 const Base = require("../Base");
@@ -131,10 +132,15 @@ class Deploy extends Base {
                 reject(remote_err);
               }
               else {
-                let m = str.match(/:([^\s]*?)\.git/);
+                let m = str.match(/\s{1,}([^\s]*?)\s{1,}/);
                 if (m && m[1]) {
+                  let parser = gitUrlParse(m[1]);
+                  let project = parser.full_name;
+                  if (parser.pathname.split('/').length <= 2) {
+                    project = `${parser.port}/${parser.name}`;
+                  }
                   resolve({
-                    project: m[1],
+                    project: project,
                     branch: this.currentBranch,
                     hash: hash.replace(/\n|\r/gm, ''),
                     isTag: options.publish,
