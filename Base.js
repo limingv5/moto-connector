@@ -24,14 +24,15 @@ class Base {
     return `ws://${this.host}${api}`;
   }
 
-  handShake(api, form) {
+  handShake(api, form, headers) {
     return new Promise((resolve, reject) => {
       if (this.token && this.host && this.app && this.secret) {
         request.post(this.apiURL(api), {
           form: Object.assign({}, {
             token: this.token,
             platform: this.app
-          }, form || {})
+          }, form || {}),
+          headers: headers
         }, (err, res, content) => {
           if (!err && res && res.statusCode == 200) {
             try {

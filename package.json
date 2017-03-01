@@ -1,7 +1,7 @@
 {
   "name": "moto-connector",
-  "version": "1.5.0",
-  "description": "moto with feb",
+  "version": "1.5.2",
+  "description": "FEB平台SDK",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

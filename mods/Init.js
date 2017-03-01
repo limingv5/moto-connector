@@ -201,27 +201,6 @@ class Init extends Base {
       }
     });
   }
-
-  pkgName(name, targetFolder) {
-    return new Promise((resolve, reject) => {
-      try {
-        let p    = pathLib.join(targetFolder, "package.json");
-        let pkg  = require(p);
-        pkg.name = name;
-        extra.outputJson(p, pkg, (err) => {
-          if (err) {
-            reject(err);
-          }
-          else {
-            resolve();
-          }
-        });
-      }
-      catch (err) {
-        reject(err);
-      }
-    });
-  }
 }
 
 module.exports = Init;
