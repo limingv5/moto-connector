@@ -1,12 +1,12 @@
 "use strict";
 
-const pathLib     = require("path");
-const extra       = require("fs-extra");
-const co          = require("co");
-const request     = require("request");
-const npminstall  = require("npminstall");
-const Git         = require("simple-git");
-const findDotGit  = require("../libs/findDotGit");
+const pathLib    = require("path");
+const extra      = require("fs-extra");
+const co         = require("co");
+const request    = require("request");
+const npminstall = require("npminstall");
+const Git        = require("simple-git");
+const findDotGit = require("../libs/findDotGit");
 
 const Base = require("../Base");
 
@@ -182,7 +182,15 @@ class Init extends Base {
                 });
               }
               else {
-                reject(new Error("分支已存在！"));
+                git.checkout(newVersion, (err) => {
+                  if (err) {
+                    reject(err);
+                  }
+                  else {
+                    this.logger.info(`切换到分支: ${newVersion}`);
+                    resolve(newVersion);
+                  }
+                });
               }
             }
           });
@@ -197,8 +205,8 @@ class Init extends Base {
   pkgName(name, targetFolder) {
     return new Promise((resolve, reject) => {
       try {
-        let p = pathLib.join(targetFolder, "package.json");
-        let pkg = require(p);
+        let p    = pathLib.join(targetFolder, "package.json");
+        let pkg  = require(p);
         pkg.name = name;
         extra.outputJson(p, pkg, (err) => {
           if (err) {
