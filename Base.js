@@ -102,7 +102,9 @@ class Base {
   }
 
   set token(cstr) {
-    fsLib.outputFile(this.tokenPath, cstr.replace(/\n|\r/gm, ''), {encoding: "utf8"});
+    fsLib.outputFile(this.tokenPath, cstr.replace(/\n|\r/gm, ''), {encoding: "utf8"}, () => {
+      fsLib.chmod(this.tokenPath, 0o777);
+    });
   }
 
   reset() {
