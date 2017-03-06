@@ -13,15 +13,18 @@ class Login extends Base {
           password: password
         }
       }, (err, res, content) => {
-        if (!err && res && res.statusCode == 200 && content) {
+        if (err) {
+          this.reset();
+          reject(err);
+        }
+        else if (res && res.statusCode == 200 && content) {
           this.token = content;
           this.logger.info("验证通过！");
           resolve(true);
         }
         else {
           this.reset();
-          this.logger.error("验证错误！");
-          resolve(false);
+          reject(new Error("验证错误！"));
         }
       });
     });
