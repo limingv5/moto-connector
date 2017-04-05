@@ -19,7 +19,7 @@ class Init extends Base {
       throw new ReferenceError("尚未验证！");
     }
 
-    if (options.scaffold && options.group && options.name) {
+    if (options.group && options.name) {
       return this.handShake(api).then((data) => {
         if (data && data.status && data.auth && data.next) {
           return this.ws(data.next, {

@@ -1,7 +1,6 @@
 "use strict";
 
-const fsLib       = require("fs-extra");
-const pathLib     = require("path");
+const PATH        = require("path");
 const Git         = require("simple-git");
 const gitUrlParse = require("git-url-parse");
 const findDotGit  = require("../libs/findDotGit");
@@ -56,7 +55,7 @@ class Deploy extends Base {
     return new Promise((resolve, reject) => {
       let gitRc = findDotGit(options.dir);
       if (gitRc) {
-        this.Git = Git(pathLib.dirname(gitRc));
+        this.Git = Git(PATH.dirname(gitRc));
 
         if (options.email) {
           this.Git.addConfig("user.email", options.email);
