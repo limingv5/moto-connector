@@ -70,14 +70,17 @@ class Init extends Base {
             reject(e);
           }
           else {
-            options.branch = options.branch || "master";
+            let optArr = ["-b", options.branch || "master"];
+            if (options.depth) {
+              optArr.push("--depth", options.depth);
+            }
 
-            Git(targetFolder).clone(gitUrl, targetFolder, ["-b", options.branch], (err) => {
+            Git(targetFolder).clone(gitUrl, targetFolder, optArr, (err) => {
               if (err) {
-                reject(new Error(`git clone ${gitUrl} -b ${options.branch}失败！`));
+                reject(new Error(`git clone ${gitUrl} ${optArr.join(' ')}失败！`));
               }
               else {
-                this.logger.info(`git clone ${gitUrl} -b ${options.branch}`);
+                this.logger.info(`git clone ${gitUrl} ${optArr.join(' ')}`);
                 resolve(targetFolder);
               }
             });
