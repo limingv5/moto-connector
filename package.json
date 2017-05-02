@@ -1,6 +1,6 @@
 {
   "name": "moto-connector",
-  "version": "1.5.6",
+  "version": "1.5.7",
   "description": "FEB平台SDK",
   "main": "index.js",
   "scripts": {

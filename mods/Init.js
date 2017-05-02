@@ -140,6 +140,35 @@ class Init extends Base {
     });
   }
 
+  isExists(branchName, targetFolder) {
+    return new Promise((resolve, reject) => {
+      if (!targetFolder) {
+        let gitRc = findDotGit();
+        if (gitRc) {
+          targetFolder = pathLib.dirname(gitRc);
+        }
+      }
+
+      if (targetFolder) {
+        let git = Git(targetFolder);
+        git.fetch(() => {
+          git.branch((list_err, branchList) => {
+            if (list_err) {
+              reject(list_err);
+            }
+            else {
+              let history = branchList.all.map(branch => branch.replace("remotes/origin/", ''));
+              resolve(Array.from(new Set(history)).indexOf(branchName) != -1);
+            }
+          });
+        });
+      }
+      else {
+        reject(new Error("所在位置非git目录！"));
+      }
+    });
+  }
+
   branch(branchName, type, targetFolder) {
     return new Promise((resolve, reject) => {
       if (!targetFolder) {

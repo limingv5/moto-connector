@@ -34,8 +34,15 @@ init.create("/api/bridge/%s/scaffold?secret=%s", {
 init.clone("gitlab地址", "本地目录名", {
   base: "基准路径",
   branch: "clone的分支，默认为master",
+  depth: clone层数，默认为完整clone,
   force: 如果目录已存在，是否强制清空？
 });
+```
+
+##### 分支是否存在
+
+```js
+init.isExists("分支名", "目标git目录");
 ```
 
 ##### 切换分支
